@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>△</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            cursor: none;
+            pointer-events: none;
+            background-color: black;
+        }
+
+        .active {
+            pointer-events: auto;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animate-blink {
+            animation: blink 1s step-start infinite;
+            position: absolute;
+            bottom: 8px;
+            height: 90%;
+            width: 100%;
+            background-color: #22c55e;
+        }
+
+        input {
+            padding-bottom: 4px;
+            caret-color: transparent;
+            pointer-events: none;
+        }
+
+        input.active {
+            pointer-events: auto;
+        }
+
+        .error-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #6e0000;
+            color: #ff3c3c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeInOut 2.2s ease-in-out forwards;
+        }
+
+        .error-text {
+            text-align: center;
+            font-size: 2vw;
+            line-height: 1.5;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border: 5px solid #ff3c3c;
+            padding: 2rem;
+            animation: flicker 1s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.2;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            40% {
+                opacity: 0.5;
+            }
+
+            60% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body onclick="startBackgroundAudio()" class="flex items-center justify-center min-h-screen">
+    <div class="bg-black p-8 border-8 border-green-500 relative">
+        <div id="inputContainer" class="bg-black p-8 border-8 border-green-500 relative">
+            <p class="text-green-500 text-center text-2xl">
+                ENTER PASSWORD
+            </p>
+            <div class="flex justify-center mt-8 space-x-4">
+                <script>
+                    for (let i = 1; i <= 12; i++) {
+                        document.write(`
+                            <div class="relative">
+                                <input type="password" id="input${i}" 
+                                       class="bg-black text-green-500 border-b-4 border-green-500 text-center text-2xl w-8 h-12 focus:outline-none" 
+                                       maxlength="1" 
+                                       oninput="playKeySound(); moveFocus(${i})" 
+                                       onkeydown="handleBackspace(event, ${i})" />
+                                <div class="absolute bottom-0 left-0 w-full border-b-4 border-green-500"></div>
+                                <div class="animate-blink hidden" id="cursor${i}"></div>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+        </div>
+
+        <!-- Animasi Error Fullscreen -->
+        <div id="errorScreen" class="error-screen hidden">
+            <div class="error-text">//UNAUTHORIZED ACCESS<br>FORBIDDEN//</div>
+        </div>
+
+        <!-- Video -->
+        <div id="videoContainer" class="video-container hidden">
+            <video id="successVideo" src="./video/welcome.mov" autoplay muted></video>
+        </div>
+
+        <!-- Audio -->
+        <audio id="keySound" src="./audio/type.wav"></audio>
+        <audio id="errorSound" src="./audio/wrong.mp3"></audio>
+        <audio id="backgroundSound" src="./audio/backsound.mp3" loop></audio>
+
+        <script>
+            const totalInputs = 12;
+            const correctPassword = "McGUCKETLABS";
+
+            function playKeySound() {
+                const keySound = document.getElementById('keySound');
+                keySound.currentTime = 0;
+                keySound.play();
+            }
+
+            function pauseBackgroundAudio() {
+                const backgroundSound = document.getElementById('backgroundSound');
+                backgroundSound.pause();
+            }
+
+            function resumeBackgroundAudio() {
+                const backgroundSound = document.getElementById('backgroundSound');
+                backgroundSound.play();
+            }
+
+            function moveFocus(current) {
+                const currentInput = document.getElementById(`input${current}`);
+                const currentCursor = document.getElementById(`cursor${current}`);
+                const nextInput = document.getElementById(`input${current + 1}`);
+                const nextCursor = document.getElementById(`cursor${current + 1}`);
+
+                if (currentInput.value && nextInput) {
+                    nextInput.classList.add('active');
+                    nextInput.focus();
+                    nextCursor.classList.remove('hidden');
+                    currentCursor.classList.add('hidden');
+                    currentInput.classList.remove('active');
+                }
+
+                if (current === totalInputs) checkPassword();
+            }
+
+            function handleBackspace(event, current) {
+                const currentInput = document.getElementById(`input${current}`);
+                const currentCursor = document.getElementById(`cursor${current}`);
+                const prevInput = document.getElementById(`input${current - 1}`);
+                const prevCursor = document.getElementById(`cursor${current - 1}`);
+
+                if (event.key === 'Backspace') {
+                    if (!currentInput.value && prevInput) {
+                        prevInput.focus();
+                        prevInput.classList.add('active');
+                        prevCursor.classList.remove('hidden');
+                        currentCursor.classList.add('hidden');
+                        currentInput.classList.remove('active');
+                    } else {
+                        currentInput.value = '';
+                    }
+                }
+            }
+
+            function checkPassword() {
+                let inputPassword = '';
+                for (let i = 1; i <= totalInputs; i++) {
+                    const input = document.getElementById(`input${i}`);
+                    inputPassword += input.value;
+                }
+
+                if (inputPassword === correctPassword) {
+                    showVideo();
+                } else {
+                    showErrorScreen();
+                }
+            }
+
+            function showVideo() {
+                const videoContainer = document.getElementById('videoContainer');
+                const successVideo = document.getElementById('successVideo');
+
+                pauseBackgroundAudio(); // Hentikan backsound
+                videoContainer.classList.remove('hidden');
+                successVideo.muted = false; // Memastikan audio video aktif
+                successVideo.play();
+
+                successVideo.onended = () => {
+                    videoContainer.classList.add('hidden');
+                    clearInputs();
+                    resumeBackgroundAudio(); // Lanjutkan backsound
+                };
+            }
+
+            function showErrorScreen() {
+                const errorScreen = document.getElementById('errorScreen');
+                const errorSound = document.getElementById('errorSound');
+
+                pauseBackgroundAudio(); // Hentikan backsound
+
+                let playCount = 0;
+
+                function playErrorSoundTwice() {
+                    if (playCount < 2) {
+                        errorSound.currentTime = 0;
+                        errorSound.play();
+                        playCount++;
+                    }
+                }
+
+                errorSound.onended = playErrorSoundTwice;
+                playErrorSoundTwice();
+
+                errorScreen.classList.remove('hidden');
+                setTimeout(() => {
+                    errorScreen.classList.add('hidden');
+                    clearInputs();
+                    resumeBackgroundAudio(); // Lanjutkan backsound
+                }, 1800);
+            }
+
+            function clearInputs() {
+                for (let i = 1; i <= totalInputs; i++) {
+                    const input = document.getElementById(`input${i}`);
+                    const cursor = document.getElementById(`cursor${i}`);
+
+                    input.value = '';
+                    input.classList.remove('active');
+                    cursor.classList.add('hidden');
+                }
+
+                const firstInput = document.getElementById('input1');
+                const firstCursor = document.getElementById('cursor1');
+
+                firstInput.classList.add('active');
+                firstInput.focus();
+                firstCursor.classList.remove('hidden');
+            }
+
+            function startBackgroundAudio() {
+                const backgroundSound = document.getElementById("backgroundSound");
+                backgroundSound.volume = 0.5;
+                backgroundSound.play().catch(error => {
+                    console.error("Failed to autoplay background sound:", error);
+                });
+            }
+
+            function showVideo() {
+                const videoContainer = document.getElementById('videoContainer');
+                const successVideo = document.getElementById('successVideo');
+
+                pauseBackgroundAudio(); // Hentikan backsound
+                videoContainer.classList.remove('hidden');
+                successVideo.muted = false; // Memastikan audio video aktif
+                successVideo.play();
+
+                successVideo.onended = () => {
+                    // Arahkan langsung ke URL tujuan tanpa memanggil clearInputs
+                    window.location.href = "https://thisisnotawebsitedotcom.com/";
+                };
+            }
+
+
+
+            document.getElementById('input1').classList.add('active');
+            document.getElementById('cursor1').classList.remove('hidden');
+            document.getElementById('input1').focus();
+        </script>
+    </div>
+</body>
+
+</html>
