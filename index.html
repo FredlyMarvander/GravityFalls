@@ -23,7 +23,6 @@
         }
 
         @keyframes blink {
-
             0%,
             100% {
                 opacity: 1;
@@ -247,6 +246,51 @@
                 }
             }
 
+            function resetCursorState() {
+                for (let i = 1; i <= totalInputs; i++) {
+                    const input = document.getElementById(`input${i}`);
+                    const cursor = document.getElementById(`cursor${i}`);
+
+                    input.classList.remove('active');
+                    cursor.classList.add('hidden');
+                }
+
+                let lastFilledInput = null;
+                for (let i = 1; i <= totalInputs; i++) {
+                    const input = document.getElementById(`input${i}`);
+                    if (input.value) {
+                        lastFilledInput = input;
+                    } else {
+                        break;
+                    }
+                }
+
+                const nextInput = lastFilledInput ? lastFilledInput : document.getElementById('input1');
+                const nextCursor = lastFilledInput ? document.getElementById(`cursor${parseInt(lastFilledInput.id.replace('input', ''))}`) : document.getElementById('cursor1');
+
+                if (nextInput) {
+                    nextInput.classList.add('active');
+                    nextInput.focus();
+                }
+
+                if (nextCursor) {
+                    nextCursor.classList.remove('hidden');
+                }
+
+                if (lastFilledInput) {
+                    const rectangle = document.getElementById(`cursor${parseInt(lastFilledInput.id.replace('input', ''))}`);
+                    rectangle.classList.add('animate-blink');
+                }
+            }
+
+            document.addEventListener('keydown', (event) => {
+                // Disable Undo (Ctrl+Z or Cmd+Z) and Redo (Ctrl+Y or Cmd+Y)
+                if ((event.ctrlKey || event.metaKey) && (event.key === 'z' || event.key === 'y')) {
+                    event.preventDefault(); // Prevent default undo/redo action
+                    console.log("Undo and Redo are disabled.");
+                }
+            });
+
             function checkPassword() {
                 let inputPassword = '';
                 for (let i = 1; i <= totalInputs; i++) {
@@ -265,15 +309,13 @@
                 const videoContainer = document.getElementById('videoContainer');
                 const successVideo = document.getElementById('successVideo');
 
-                pauseBackgroundAudio(); // Hentikan backsound
+                pauseBackgroundAudio();
                 videoContainer.classList.remove('hidden');
-                successVideo.muted = false; // Memastikan audio video aktif
+                successVideo.muted = false;
                 successVideo.play();
 
                 successVideo.onended = () => {
-                    videoContainer.classList.add('hidden');
-                    clearInputs();
-                    resumeBackgroundAudio(); // Lanjutkan backsound
+                    window.location.href = "https://thisisnotawebsitedotcom.com/";
                 };
             }
 
@@ -281,7 +323,7 @@
                 const errorScreen = document.getElementById('errorScreen');
                 const errorSound = document.getElementById('errorSound');
 
-                pauseBackgroundAudio(); // Hentikan backsound
+                pauseBackgroundAudio();
 
                 let playCount = 0;
 
@@ -300,7 +342,7 @@
                 setTimeout(() => {
                     errorScreen.classList.add('hidden');
                     clearInputs();
-                    resumeBackgroundAudio(); // Lanjutkan backsound
+                    resumeBackgroundAudio();
                 }, 1800);
             }
 
@@ -329,23 +371,6 @@
                     console.error("Failed to autoplay background sound:", error);
                 });
             }
-
-            function showVideo() {
-                const videoContainer = document.getElementById('videoContainer');
-                const successVideo = document.getElementById('successVideo');
-
-                pauseBackgroundAudio(); // Hentikan backsound
-                videoContainer.classList.remove('hidden');
-                successVideo.muted = false; // Memastikan audio video aktif
-                successVideo.play();
-
-                successVideo.onended = () => {
-                    // Arahkan langsung ke URL tujuan tanpa memanggil clearInputs
-                    window.location.href = "https://thisisnotawebsitedotcom.com/";
-                };
-            }
-
-
 
             document.getElementById('input1').classList.add('active');
             document.getElementById('cursor1').classList.remove('hidden');
